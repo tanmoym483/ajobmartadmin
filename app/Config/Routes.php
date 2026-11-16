@@ -50,6 +50,29 @@ $routes->group('shipping-admin', [
 
     $routes->get('label-bookings/(:num)/pdf', 'ShippingAdmin::viewSellerLabel/$1');
     $routes->get('label-bookings/(:num)/receipt', 'ShippingAdmin::viewPostalReceipt/$1');
+
+
+
+    $routes->get('catalog', 'Admin\CatalogManagementController::index/categories');
+    $routes->get('catalog/(:segment)', 'Admin\CatalogManagementController::index/$1');
+    $routes->get('catalog/(:segment)/add', 'Admin\CatalogManagementController::add/$1');
+    $routes->get('catalog/(:segment)/edit/(:num)', 'Admin\CatalogManagementController::edit/$1/$2');
+    $routes->post('catalog/(:segment)/save', 'Admin\CatalogManagementController::save/$1');
+    $routes->post('catalog/(:segment)/save/(:num)', 'Admin\CatalogManagementController::save/$1/$2');
+    $routes->post('catalog/(:segment)/delete/(:num)', 'Admin\CatalogManagementController::delete/$1/$2');
+
+
+    $routes->get('catalog', 'Admin\CatalogManagementController::index/categories');
+    $routes->get('catalog/categories', 'Admin\CatalogManagementController::index/categories');
+    $routes->get('catalog/subcategories', 'Admin\CatalogManagementController::index/subcategories');
+    $routes->get('catalog/product-types', 'Admin\CatalogManagementController::index/product-types');
+    $routes->get('catalog/attributes', 'Admin\CatalogManagementController::index/attributes');
+
+    $routes->get('catalog/(:segment)/add', 'Admin\CatalogManagementController::add/$1');
+    $routes->get('catalog/(:segment)/edit/(:num)', 'Admin\CatalogManagementController::edit/$1/$2');
+    $routes->post('catalog/(:segment)/save', 'Admin\CatalogManagementController::save/$1');
+    $routes->post('catalog/(:segment)/save/(:num)', 'Admin\CatalogManagementController::save/$1/$2');
+    $routes->post('catalog/(:segment)/delete/(:num)', 'Admin\CatalogManagementController::delete/$1/$2');
 });
 
 // Admin order management

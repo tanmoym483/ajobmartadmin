@@ -54,6 +54,13 @@ $shippingItems = [
         'icon' => 'bi-printer',
         'match' => 'shipping-admin/label-settings',
     ],
+
+    [
+        'label' => 'Product Catalog',
+        'url' => 'shipping-admin/catalog/categories',
+        'icon' => 'bi bi-diagram-3',
+        'match' => 'shipping-admin/catalog/categories',
+    ],
 ];
 ?>
 
