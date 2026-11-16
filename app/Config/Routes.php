@@ -132,3 +132,19 @@ $routes->get('orders', 'ShippingAdminOrders::index');
 $routes->get('orders/list-data', 'ShippingAdminOrders::listData');
 
 $routes->get('orders/(:num)', 'ShippingAdminOrders::details/$1');
+
+
+$routes->get(
+    'admin/cancellation-requests',
+    'Admin\CancellationRequests::index'
+);
+
+$routes->get(
+    'admin/cancellation-requests/(:num)',
+    'Admin\CancellationRequests::details/$1'
+);
+
+$routes->post(
+    'admin/cancellation-requests/review/(:num)',
+    'Admin\CancellationRequests::review/$1'
+);

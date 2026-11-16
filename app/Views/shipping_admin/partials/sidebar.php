@@ -33,6 +33,13 @@ $menuItems = [
         'icon' => 'bi-people',
         'match' => 'shipping-admin/customers',
     ],
+
+    [
+        'label' => 'Cancellation Requests',
+        'url' => 'admin/cancellation-requests',
+        'icon' => 'bi bi-x-circle',
+        'match' => 'admin/cancellation-requests',
+    ],
 ];
 
 $shippingItems = [
