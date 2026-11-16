@@ -27,7 +27,7 @@ class ShippingAdmin extends BaseController
 
     public function index()
     {
-        return $this->view('shipping_admin/dashboard', [
+        return view('shipping_admin/dashboard', [
             'admin_username' => session()->get('shipping_admin_username'),
             'admin_role'     => session()->get('shipping_admin_role') ?? 'ADMIN',
         ]);
