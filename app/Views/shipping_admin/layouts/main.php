@@ -12,6 +12,8 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
           rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 
     <style>
         :root {
@@ -177,7 +179,47 @@
                 z-index: 1030;
             }
         }
+
+        
     </style>
+
+    <style>
+.select2-container {
+    width: 100% !important;
+}
+
+.select2-container--default .select2-selection--single {
+    height: 38px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+}
+
+.select2-container--default .select2-selection--single
+.select2-selection__rendered {
+    padding-left: 12px;
+    line-height: 36px;
+    color: #212529;
+}
+
+.select2-container--default .select2-selection--single
+.select2-selection__arrow {
+    height: 36px;
+}
+
+.select2-dropdown {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+}
+
+.select2-search--dropdown .select2-search__field {
+    padding: 8px 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    outline: none;
+}
+</style>
 
     <?= $this->renderSection('styles') ?>
 </head>
@@ -209,6 +251,10 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
     (function () {
@@ -228,6 +274,17 @@
 
         overlay?.addEventListener('click', closeSidebar);
     })();
+</script>
+<script>
+$(document).ready(function () {
+
+    $('#catalogCategory, #catalogSubcategory').select2({
+        placeholder: 'Search or select category',
+        allowClear: true,
+        width: '100%'
+    });
+
+});
 </script>
 
 <?= $this->renderSection('scripts') ?>
