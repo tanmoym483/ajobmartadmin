@@ -65,6 +65,17 @@ class CatalogManagementModel extends Model
             ->get()->getResultArray();
     }
 
+    public function producttype(?int $subcategoryId = null, bool $activeOnly = false): array
+    {
+        $builder = db_connect()->table('ajobmart_product_types p')
+            ->select('p.*, s.name AS subcategory_name')
+            ->join('ajobmart_subcategories s', 's.id = p.subcategory_id', 'left');
+        if ($subcategoryId) $builder->where('p.subcategory_id', $subcategoryId);
+        if ($activeOnly) $builder->where('p.status', 1);
+        return $builder->orderBy('p.sort_order', 'ASC')->orderBy('p.name', 'ASC')
+            ->get()->getResultArray();
+    }
+
     public function rows(string $type, string $search = ''): array
     {
         $db = db_connect();
@@ -95,10 +106,12 @@ class CatalogManagementModel extends Model
         }
 
         $builder = $db->table('ajobmart_category_attributes a')
-            ->select('a.*, c.name AS category_name, s.name AS subcategory_name')
+            ->select('a.*, c.name AS category_name, s.name AS subcategory_name, p.name AS producttype_name')
             ->join('ajobmart_categories c', 'c.id = a.category_id')
-            ->join('ajobmart_subcategories s', 's.id = a.subcategory_id', 'left');
-        if ($search !== '') $builder->groupStart()->like('a.label', $search)->orLike('a.attribute_name', $search)->orLike('c.name', $search)->orLike('s.name', $search)->groupEnd();
+            ->join('ajobmart_subcategories s', 's.id = a.subcategory_id', 'left')
+            ->join('ajobmart_product_types p', 'p.id = a.product_type_id', 'left');
+
+        if ($search !== '') $builder->groupStart()->like('a.label', $search)->orLike('a.attribute_name', $search)->orLike('c.name', $search)->orLike('s.name', $search)->orLike('p.name', $search)->groupEnd();
         return $builder->orderBy('c.sort_order', 'ASC')->orderBy('a.sort_order', 'ASC')->get()->getResultArray();
     }
 

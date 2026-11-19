@@ -8,6 +8,11 @@ $statusDefault = ($type === 'categories' || $type === 'attributes') ? 'active' :
 $status = old('status', $row['status'] ?? $statusDefault);
 $categorySelected = (string)old('category_id', $row['category_id'] ?? '');
 $subcategorySelected = (string)old('subcategory_id', $row['subcategory_id'] ?? '');
+$producttypeSelected = (string)old(
+    'product_type_id',
+    $row['product_type_id'] ?? $row['producttype_id'] ?? ''
+);
+
 $options = '';
 if (!empty($row['options_json'])) {
     $decoded = json_decode($row['options_json'], true);
@@ -58,6 +63,16 @@ $options = old('options', $options);
     <?php endif ?>
 
     <?php if ($type === 'attributes'): ?>
+        <div class="mb-3">
+        <label class="form-label fw-semibold">Product Type <?= $type === 'attributes' ? '<span class="text-danger">*</span>' : '<span class="text-muted">(optional — blank means all Product Type)</span>' ?></label>
+        <select class="form-select" name="product_type_id" id="catalogProducttype" <?= $type === 'attributes' ? 'required' : '' ?>>
+            <option value="">Select product type</option>
+            <?php foreach ($producttype as $p): ?>
+            <option value="<?= (int)$p['id'] ?>" data-subcategory="<?= (int)$p['subcategory_id'] ?>" <?= $producttypeSelected === (string)$p['id'] ? 'selected' : '' ?>><?= esc($p['subcategory_name'] . ' / ' . $p['name']) ?></option>
+            <?php endforeach ?>
+        </select>
+    </div>
+
     <div class="mb-3">
         <label class="form-label fw-semibold">Attribute Key <span class="text-danger">*</span></label>
         <input class="form-control" name="attribute_name" value="<?= esc(old('attribute_name', $row['attribute_name'] ?? '')) ?>" placeholder="e.g. net_weight" required>

@@ -43,6 +43,7 @@
                         <th>ID</th>
                         <?php if ($type === 'subcategories' || $type === 'attributes'): ?><th>Category</th><?php endif ?>
                         <?php if ($type === 'product-types' || ($type === 'attributes')): ?><th>Subcategory</th><?php endif ?>
+                        <?php if ($type === 'attributes'): ?><th>Product_Type</th><?php endif ?>
                         <th>Name / Label</th>
                         <?php if ($type !== 'attributes'): ?><th>Slug</th><?php else: ?><th>Key</th><th>Input</th><th>Required</th><?php endif ?>
                         <th>Sort</th><th>Status</th><th class="text-end">Actions</th>
@@ -60,6 +61,7 @@
                         <td><?= (int)$r['id'] ?></td>
                         <?php if ($type === 'subcategories' || $type === 'attributes'): ?><td><?= esc($r['category_name'] ?? '-') ?></td><?php endif ?>
                         <?php if ($type === 'product-types' || $type === 'attributes'): ?><td><?= esc($r['subcategory_name'] ?? 'All subcategories') ?></td><?php endif ?>
+                          <?php if ($type === 'attributes'): ?><td><?= esc($r['producttype_name'] ?? '-') ?></td><?php endif ?>  
                         <td class="fw-semibold"><?= esc($displayName) ?></td>
                         <?php if ($type !== 'attributes'): ?>
                             <td><code><?= esc($r['slug'] ?? '') ?></code></td>

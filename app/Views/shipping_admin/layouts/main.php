@@ -278,7 +278,7 @@
 <script>
 $(document).ready(function () {
 
-    $('#catalogCategory, #catalogSubcategory').select2({
+    $('#catalogCategory, #catalogSubcategory, #catalogProducttype').select2({
         placeholder: 'Search or select category',
         allowClear: true,
         width: '100%'

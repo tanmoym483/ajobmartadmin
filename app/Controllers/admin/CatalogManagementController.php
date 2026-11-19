@@ -67,6 +67,7 @@ class CatalogManagementController extends BaseController
             'row' => $row,
             'categories' => $this->catalog->categories(),
             'subcategories' => $this->catalog->subcategories(),
+            'producttype' => $this->catalog->producttype(),
             'action' => site_url('shipping-admin/catalog/' . $type . '/save' . (!empty($row['id']) ? '/' . $row['id'] : '')),
         ];
     }
@@ -106,44 +107,166 @@ class CatalogManagementController extends BaseController
             $data += ['subcategory_id' => $subcategoryId, 'description' => $description ?: null];
             $status = (int) $this->request->getPost('status');
             $data['status'] = $status === 1 ? 1 : 0;
+        
         } else {
+
             $categoryId = (int) $this->request->getPost('category_id');
+
             $subcategoryRaw = $this->request->getPost('subcategory_id');
-            $subcategoryId = ($subcategoryRaw === '' || $subcategoryRaw === null) ? null : (int) $subcategoryRaw;
-            if (!$this->catalog->findRow('categories', $categoryId)) $errors[] = 'Please select a valid category.';
-            if ($subcategoryId) {
-                $sub = $this->catalog->findRow('subcategories', $subcategoryId);
-                if (!$sub || (int) $sub['category_id'] !== $categoryId) $errors[] = 'Selected subcategory does not belong to this category.';
+
+            $subcategoryId = ($subcategoryRaw === '' || $subcategoryRaw === null)
+                ? null
+                : (int) $subcategoryRaw;
+
+            $productTypeRaw = $this->request->getPost('product_type_id');
+
+            $productTypeId = ($productTypeRaw === '' || $productTypeRaw === null)
+                ? null
+                : (int) $productTypeRaw;
+
+            // Validate category
+            $category = $this->catalog->findRow('categories', $categoryId);
+
+            if (!$category) {
+                $errors[] = 'Please select a valid category.';
             }
 
-            $attributeName = strtolower(trim((string) $this->request->getPost('attribute_name')));
+            // Validate subcategory
+            if ($subcategoryId) {
+
+                $sub = $this->catalog->findRow('subcategories', $subcategoryId);
+
+                if (!$sub || (int) $sub['category_id'] !== $categoryId) {
+                    $errors[] = 'Selected subcategory does not belong to this category.';
+                }
+            }
+
+            // Validate product type
+            $productType = null;
+
+            if (!$productTypeId) {
+
+                $errors[] = 'Please select a product type.';
+
+            } else {
+
+                $productType = $this->catalog->findRow(
+                    'product-types',
+                    $productTypeId
+                );
+
+                if (!$productType) {
+
+                    $errors[] = 'Please select a valid product type.';
+
+                } else {
+
+                    // Product type must belong to the selected subcategory
+                    $productTypeSubcategoryId = (int) $productType['subcategory_id'];
+
+                    $productSubcategory = $this->catalog->findRow(
+                        'subcategories',
+                        $productTypeSubcategoryId
+                    );
+
+                    if (!$productSubcategory) {
+
+                        $errors[] = 'Invalid product type subcategory.';
+
+                    } else {
+
+                        // Automatically use product type's subcategory
+                        if ($subcategoryId === null) {
+
+                            $subcategoryId = $productTypeSubcategoryId;
+
+                        } elseif ($subcategoryId !== $productTypeSubcategoryId) {
+
+                            $errors[] = 'Selected product type does not belong to the selected subcategory.';
+
+                        }
+
+                        // Verify category relationship
+                        if ((int) $productSubcategory['category_id'] !== $categoryId) {
+
+                            $errors[] = 'Selected product type does not belong to the selected category.';
+
+                        }
+                    }
+                }
+            }
+
+            // Attribute information
+            $attributeName = strtolower(
+                trim((string) $this->request->getPost('attribute_name'))
+            );
+
             $attributeName = preg_replace('/[^a-z0-9_]+/', '_', $attributeName);
             $attributeName = trim($attributeName, '_');
+
             $label = trim((string) $this->request->getPost('label'));
+
             $inputType = (string) $this->request->getPost('input_type');
-            $allowedTypes = ['text', 'number', 'textarea', 'select', 'date', 'checkbox'];
-            if ($attributeName === '') $errors[] = 'Attribute key is required.';
-            if ($label === '') $errors[] = 'Attribute label is required.';
-            if (!in_array($inputType, $allowedTypes, true)) $errors[] = 'Invalid input type.';
+
+            $allowedTypes = [
+                'text',
+                'number',
+                'textarea',
+                'select',
+                'date',
+                'checkbox'
+            ];
+
+            if ($attributeName === '') {
+                $errors[] = 'Attribute key is required.';
+            }
+
+            if ($label === '') {
+                $errors[] = 'Attribute label is required.';
+            }
+
+            if (!in_array($inputType, $allowedTypes, true)) {
+                $errors[] = 'Invalid input type.';
+            }
+
             $options = trim((string) $this->request->getPost('options'));
+
             $optionsJson = null;
+
             if ($inputType === 'select' || $inputType === 'checkbox') {
-                $values = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $options))));
-                if (!$values) $errors[] = 'Enter at least one option, one per line.';
+
+                $values = array_values(
+                    array_filter(
+                        array_map('trim', preg_split('/\r\n|\r|\n/', $options))
+                    )
+                );
+
+                if (!$values) {
+                    $errors[] = 'Enter at least one option, one per line.';
+                }
+
                 $optionsJson = json_encode($values, JSON_UNESCAPED_UNICODE);
             }
+
             $data = [
-                'category_id' => $categoryId,
+                'category_id'    => $categoryId,
                 'subcategory_id' => $subcategoryId,
+                'product_type_id' => $productTypeId,
+
                 'attribute_name' => $attributeName,
-                'label' => $label,
-                'input_type' => $inputType,
-                'is_required' => $this->request->getPost('is_required') ? 1 : 0,
-                'options_json' => $optionsJson,
-                'status' => $this->request->getPost('status') === 'inactive' ? 'inactive' : 'active',
+                'label'          => $label,
+                'input_type'     => $inputType,
+                'is_required'    => $this->request->getPost('is_required') ? 1 : 0,
+                'options_json'   => $optionsJson,
+
+                'status' => $this->request->getPost('status') === 'inactive'
+                    ? 'inactive'
+                    : 'active',
+
                 'sort_order' => $sort,
             ];
         }
+
 
         $parentId = (int) ($data['category_id'] ?? $data['subcategory_id'] ?? 0);
         $slug = $this->slugify($name);
