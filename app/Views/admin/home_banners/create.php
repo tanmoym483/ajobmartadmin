@@ -5,13 +5,13 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">Add Home Banner</h4>
-    <a href="<?= site_url('shipping-admin/home-banners') ?>" class="btn btn-outline-secondary">
+    <a href="<?= site_url('admin/home-banners') ?>" class="btn btn-outline-secondary">
         Back to Banners
     </a>
 </div>
 
 <form id="bannerForm"
-      action="<?= site_url('shipping-admin/home-banners/store') ?>"
+      action="<?= site_url('admin/home-banners/store') ?>"
       method="post"
       enctype="multipart/form-data">
 

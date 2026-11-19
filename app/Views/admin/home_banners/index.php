@@ -20,7 +20,7 @@ $currentPath = trim(uri_string(), '/');
             </p>
         </div>
 
-        <a href="<?= site_url('shipping-admin/home-banners/create') ?>"
+        <a href="<?= site_url('admin/home-banners/create') ?>"
            class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i>
             Add New Banner
@@ -204,7 +204,7 @@ $currentPath = trim(uri_string(), '/');
 
                                         <div class="d-flex justify-content-center gap-2">
 
-                                            <a href="<?= site_url('shipping-admin/home-banners/edit/' . $banner['id']) ?>"
+                                            <a href="<?= site_url('admin/home-banners/edit/' . $banner['id']) ?>"
                                                class="btn btn-sm btn-outline-primary"
                                                title="Edit Banner">
 
@@ -225,7 +225,7 @@ $currentPath = trim(uri_string(), '/');
                                         </div>
 
                                         <form id="deleteBannerForm<?= (int) $banner['id'] ?>"
-                                              action="<?= site_url('shipping-admin/home-banners/delete/' . $banner['id']) ?>"
+                                              action="<?= site_url('admin/home-banners/delete/' . $banner['id']) ?>"
                                               method="post"
                                               class="d-none">
 
@@ -261,7 +261,7 @@ $currentPath = trim(uri_string(), '/');
                         You haven't uploaded any homepage banners yet.
                     </p>
 
-                    <a href="<?= site_url('shipping-admin/home-banners/create') ?>"
+                    <a href="<?= site_url('admin/home-banners/create') ?>"
                        class="btn btn-primary">
 
                         <i class="bi bi-plus-lg me-1"></i>

@@ -15,7 +15,7 @@ class HomeBanners extends BaseController
         $this->db = db_connect();
 
         $sharedPath = rtrim(
-            env('AJOBMART_SHARED_UPLOAD_PATH', 'C:/xampp/htdocs/ajobmart-shared'),
+            env('AJOBMART_SHARED_UPLOAD_PATH'),
             '/\\'
         );
 
@@ -189,7 +189,7 @@ public function store()
             ->getRowArray();
 
         if (!$banner) {
-            return redirect()->to(site_url('shipping-admin/home-banners'))
+            return redirect()->to(site_url('admin/home-banners'))
                 ->with('error', 'Banner not found.');
         }
 
@@ -211,7 +211,7 @@ public function store()
             ->getRowArray();
 
         if (!$banner) {
-            return redirect()->to(site_url('shipping-admin/home-banners'))
+            return redirect()->to(site_url('admin/home-banners'))
                 ->with('error', 'Banner not found.');
         }
 
@@ -286,7 +286,7 @@ public function store()
             }
         }
 
-        return redirect()->to(site_url('shipping-admin/home-banners'))
+        return redirect()->to(site_url('admin/home-banners'))
             ->with('success', 'Banner updated successfully.');
     }
 
@@ -322,7 +322,7 @@ public function store()
             @unlink($oldPath);
         }
 
-        return redirect()->to(site_url('shipping-admin/home-banners'))
+        return redirect()->to(site_url('admin/home-banners'))
             ->with('success', 'Banner deleted successfully.');
     }
 }
