@@ -101,6 +101,19 @@ $shippingItems = [
         </a>
     <?php endforeach; ?>
 
+    <div class="sidebar-label">Website Management</div>
+
+<a href="<?= site_url('admin/home-banners') ?>"
+   class="sidebar-link <?= (
+       $currentPath === 'admin/home-banners'
+       || str_starts_with($currentPath, 'admin/home-banners/')
+   ) ? 'active' : '' ?>">
+
+    <i class="bi bi-images"></i>
+    <span>Home Banners</span>
+
+</a>
+
     <div class="sidebar-label">System</div>
 
     <a href="<?= site_url('shipping-admin/settings') ?>"

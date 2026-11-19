@@ -148,3 +148,18 @@ $routes->post(
     'admin/cancellation-requests/review/(:num)',
     'Admin\CancellationRequests::review/$1'
 );
+
+$routes->group('admin', function($routes) {
+
+    $routes->get('home-banners', 'Admin\HomeBanners::index');
+    $routes->get('home-banners/create', 'Admin\HomeBanners::create');
+    $routes->post('home-banners/store', 'Admin\HomeBanners::store');
+
+    $routes->get('home-banners/edit/(:num)', 'Admin\HomeBanners::edit/$1');
+    $routes->post('home-banners/update/(:num)', 'Admin\HomeBanners::update/$1');
+
+    $routes->post('home-banners/delete/(:num)', 'Admin\HomeBanners::delete/$1');
+
+});
+
+$routes->get('shared-images/(:any)', 'SharedImages::show/$1');
