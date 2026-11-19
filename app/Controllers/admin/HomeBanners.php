@@ -193,8 +193,8 @@ public function store()
                 ->with('error', 'Banner not found.');
         }
 
-        return $this->view(
-            'shipping_admin/home_banners/edit',
+        return view(
+            'admin/home_banners/edit',
             ['banner' => $banner]
         );
     }
