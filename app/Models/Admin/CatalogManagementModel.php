@@ -136,9 +136,10 @@ class CatalogManagementModel extends Model
             ->join('ajobmart_subcategories s', 's.id = a.subcategory_id', 'left')
             ->join('ajobmart_product_types p', 'p.id = a.product_type_id', 'left')
             ->where('c.status', 'active')
-            ->where('s.status', 1)
             ->groupStart()
                 ->where('a.product_type_id IS NULL', null, false)
+                ->where('a.subcategory_id IS NULL', null, false)
+                ->orWhere('s.status', 1)
                 ->orWhere('p.status', 1)
             ->groupEnd();
 
