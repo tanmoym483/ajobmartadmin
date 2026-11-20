@@ -102,6 +102,12 @@ $routes->group('shipping-admin', [
     // Catalog default page
     $routes->get('catalog', 'Admin\CatalogManagementController::index/categories');
 
+    $routes->get('catalog/subcategories-json', 'Admin\CatalogManagementController::subcategoriesJson');
+$routes->get('catalog/product-types-json', 'Admin\CatalogManagementController::productTypesJson');
+$routes->get('catalog/attributes-json', 'Admin\CatalogManagementController::attributesJson');
+$routes->get('catalog/(:segment)/bulk', 'Admin\CatalogManagementController::bulk/$1');
+$routes->post('catalog/(:segment)/bulk/save', 'Admin\CatalogManagementController::bulkSave/$1');
+
     // Category, Subcategory, Product Type, Attributes
     $routes->get('catalog/(:segment)', 'Admin\CatalogManagementController::index/$1');
 

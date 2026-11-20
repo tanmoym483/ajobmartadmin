@@ -65,9 +65,9 @@ class CatalogManagementController extends BaseController
             'pageTitle' => $title,
             'type' => $type,
             'row' => $row,
-            'categories' => $this->catalog->categories(),
-            'subcategories' => $this->catalog->subcategories(),
-            'producttype' => $this->catalog->producttype(),
+            'categories' => $this->catalog->categories(true),
+            'subcategories' => $this->catalog->subcategories(null, true),
+            'producttype' => $this->catalog->producttype(null, true),
             'action' => site_url('shipping-admin/catalog/' . $type . '/save' . (!empty($row['id']) ? '/' . $row['id'] : '')),
         ];
     }
@@ -97,13 +97,16 @@ class CatalogManagementController extends BaseController
             $data['status'] = $status;
         } elseif ($type === 'subcategories') {
             $categoryId = (int) $this->request->getPost('category_id');
-            if (!$this->catalog->findRow('categories', $categoryId)) $errors[] = 'Please select a valid category.';
+            $category = $this->catalog->findRow('categories', $categoryId);
+            if (!$category || ($category['status'] ?? '') !== 'active') $errors[] = 'Please select an active category.';
             $data += ['category_id' => $categoryId, 'description' => $description ?: null];
             $status = (int) $this->request->getPost('status');
             $data['status'] = $status === 1 ? 1 : 0;
         } elseif ($type === 'product-types') {
             $subcategoryId = (int) $this->request->getPost('subcategory_id');
-            if (!$this->catalog->findRow('subcategories', $subcategoryId)) $errors[] = 'Please select a valid subcategory.';
+            $subcategory = $this->catalog->findRow('subcategories', $subcategoryId);
+            if (!$subcategory || (int)($subcategory['status'] ?? 0) !== 1) $errors[] = 'Please select an active subcategory.';
+            elseif (($parentCategory = $this->catalog->findRow('categories', (int)$subcategory['category_id'])) === null || ($parentCategory['status'] ?? '') !== 'active') $errors[] = 'The selected subcategory belongs to an inactive category.';
             $data += ['subcategory_id' => $subcategoryId, 'description' => $description ?: null];
             $status = (int) $this->request->getPost('status');
             $data['status'] = $status === 1 ? 1 : 0;
@@ -127,8 +130,8 @@ class CatalogManagementController extends BaseController
             // Validate category
             $category = $this->catalog->findRow('categories', $categoryId);
 
-            if (!$category) {
-                $errors[] = 'Please select a valid category.';
+            if (!$category || ($category['status'] ?? '') !== 'active') {
+                $errors[] = 'Please select an active category.';
             }
 
             // Validate subcategory
@@ -136,7 +139,7 @@ class CatalogManagementController extends BaseController
 
                 $sub = $this->catalog->findRow('subcategories', $subcategoryId);
 
-                if (!$sub || (int) $sub['category_id'] !== $categoryId) {
+                if (!$sub || (int)($sub['status'] ?? 0) !== 1 || (int) $sub['category_id'] !== $categoryId) {
                     $errors[] = 'Selected subcategory does not belong to this category.';
                 }
             }
@@ -155,9 +158,9 @@ class CatalogManagementController extends BaseController
                     $productTypeId
                 );
 
-                if (!$productType) {
+                if (!$productType || (int)($productType['status'] ?? 0) !== 1) {
 
-                    $errors[] = 'Please select a valid product type.';
+                    $errors[] = 'Please select an active product type.';
 
                 } else {
 
@@ -286,6 +289,118 @@ class CatalogManagementController extends BaseController
 
         return redirect()->to(site_url('shipping-admin/catalog/' . $type))
             ->with('success', $id ? 'Record updated successfully.' : 'Record added successfully.');
+    }
+
+    public function bulk(string $type)
+    {
+        if (!$this->validType($type)) return redirect()->to(site_url('shipping-admin/catalog/categories'));
+        return view('shipping_admin/catalog/bulk', [
+            'type' => $type,
+            'pageTitle' => 'Bulk Add ' . $this->titles[$type],
+            'categories' => $this->catalog->categories(true),
+        ]);
+    }
+
+    public function bulkSave(string $type)
+    {
+        if (!$this->validType($type)) return redirect()->to(site_url('shipping-admin/catalog/categories'));
+        $db = db_connect();
+        $errors = [];
+        $rows = $this->request->getPost('rows');
+        if (!is_array($rows)) $rows = [];
+        $rows = array_values(array_filter($rows, static function ($r) {
+            return is_array($r) && trim((string)($r['name'] ?? $r['label'] ?? '')) !== '';
+        }));
+        if (!$rows) $errors[] = 'Please enter at least one record.';
+
+        $categoryId = (int)$this->request->getPost('category_id');
+        $subcategoryId = (int)$this->request->getPost('subcategory_id');
+        $productTypeId = (int)$this->request->getPost('product_type_id');
+        if ($type === 'subcategories') {
+            $cat = $this->catalog->findRow('categories', $categoryId);
+            if (!$cat || ($cat['status'] ?? '') !== 'active') $errors[] = 'Select an active category.';
+        } elseif ($type === 'product-types') {
+            $sub = $this->catalog->findRow('subcategories', $subcategoryId);
+            $cat = $sub ? $this->catalog->findRow('categories', (int)$sub['category_id']) : null;
+            if (!$sub || (int)($sub['status'] ?? 0) !== 1 || !$cat || ($cat['status'] ?? '') !== 'active') $errors[] = 'Select a subcategory under an active category.';
+        } elseif ($type === 'attributes') {
+            $pt = $this->catalog->findRow('product-types', $productTypeId);
+            $sub = $pt ? $this->catalog->findRow('subcategories', (int)$pt['subcategory_id']) : null;
+            $cat = $sub ? $this->catalog->findRow('categories', (int)$sub['category_id']) : null;
+            if (!$pt || (int)($pt['status'] ?? 0) !== 1 || !$sub || (int)($sub['status'] ?? 0) !== 1 || !$cat || ($cat['status'] ?? '') !== 'active') $errors[] = 'Select a product type under an active subcategory and category.';
+        }
+
+        $prepared = [];
+        foreach ($rows as $i => $row) {
+            $sort = (int)($row['sort_order'] ?? 0);
+            if ($type === 'attributes') {
+                $label = trim((string)($row['label'] ?? ''));
+                $key = strtolower(trim((string)($row['attribute_name'] ?? $label)));
+                $key = trim((string)preg_replace('/[^a-z0-9_]+/', '_', $key), '_');
+                $inputType = (string)($row['input_type'] ?? 'text');
+                $allowed = ['text','number','textarea','select','date','checkbox'];
+                if ($label === '' || $key === '') $errors[] = 'Attribute row ' . ($i + 1) . ': label and key are required.';
+                if (!in_array($inputType, $allowed, true)) $errors[] = 'Attribute row ' . ($i + 1) . ': invalid input type.';
+                $optionsJson = null;
+                if (in_array($inputType, ['select','checkbox'], true)) {
+                    $opts = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string)($row['options'] ?? '')))));
+                    if (!$opts) $errors[] = 'Attribute row ' . ($i + 1) . ': enter options on separate lines.';
+                    $optionsJson = json_encode($opts, JSON_UNESCAPED_UNICODE);
+                }
+                $prepared[] = [
+                    'category_id' => (int)($this->catalog->findRow('subcategories', (int)($pt['subcategory_id'] ?? 0))['category_id'] ?? 0),
+                    'subcategory_id' => $subcategoryId ?: (int)($pt['subcategory_id'] ?? 0),
+                    'product_type_id' => $productTypeId,
+                    'attribute_name' => $key, 'label' => $label, 'input_type' => $inputType,
+                    'is_required' => !empty($row['is_required']) ? 1 : 0,
+                    'options_json' => $optionsJson,
+                    'status' => (($row['status'] ?? 'active') === 'inactive') ? 'inactive' : 'active',
+                    'sort_order' => $sort,
+                ];
+            } else {
+                $name = trim((string)($row['name'] ?? ''));
+                if ($name === '') $errors[] = 'Row ' . ($i + 1) . ': name is required.';
+                $slug = $this->slugify($name);
+                $data = ['name' => $name, 'slug' => $slug, 'sort_order' => $sort];
+                if ($type === 'categories') {
+                    $data['status'] = (($row['status'] ?? 'active') === 'inactive') ? 'inactive' : 'active';
+                } elseif ($type === 'subcategories') {
+                    $data += ['category_id' => $categoryId, 'description' => trim((string)($row['description'] ?? '')) ?: null];
+                    $data['status'] = (int)($row['status'] ?? 1) === 1 ? 1 : 0;
+                } else {
+                    $data += ['subcategory_id' => $subcategoryId, 'description' => trim((string)($row['description'] ?? '')) ?: null];
+                    $data['status'] = (int)($row['status'] ?? 1) === 1 ? 1 : 0;
+                }
+                if ($slug === '' || $this->catalog->slugExists($type, $slug, $categoryId ?: $subcategoryId)) $errors[] = 'Row ' . ($i + 1) . ': invalid or duplicate name.';
+                $prepared[] = $data;
+            }
+        }
+        if ($errors) return redirect()->back()->withInput()->with('errors', $errors);
+
+        $db->transBegin();
+        try {
+            foreach ($prepared as $data) {
+                if (!$this->catalog->saveRow($type, $data)) throw new \RuntimeException('A record could not be saved.');
+            }
+            if ($db->transStatus() === false) throw new \RuntimeException('Database transaction failed.');
+            $db->transCommit();
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            return redirect()->back()->withInput()->with('error', 'Bulk save failed. ' . $e->getMessage());
+        }
+        return redirect()->to(site_url('shipping-admin/catalog/' . $type))->with('success', count($prepared) . ' records saved successfully.');
+    }
+
+    public function productTypesJson()
+    {
+        $subcategoryId = (int)$this->request->getGet('subcategory_id');
+        return $this->response->setJSON(['items' => $this->catalog->producttype($subcategoryId ?: null, true)]);
+    }
+
+    public function attributesJson()
+    {
+        $productTypeId = (int)$this->request->getGet('product_type_id');
+        return $this->response->setJSON(['items' => $productTypeId ? $this->catalog->attributesByProductType($productTypeId, true) : []]);
     }
 
     public function delete(string $type, int $id)

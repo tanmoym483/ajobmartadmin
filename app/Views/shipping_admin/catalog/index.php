@@ -6,6 +6,7 @@
         <h1 class="admin-page-title"><?= esc($pageTitle) ?></h1>
         <div class="admin-page-subtitle">Manage your Ajobmart product catalog</div>
     </div>
+    <a class="btn btn-outline-primary" href="<?= site_url('shipping-admin/catalog/' . $type . '/bulk') ?>"><i class="bi bi-list-ul me-1"></i> Bulk Add</a>
     <a class="btn btn-primary" href="<?= site_url('shipping-admin/catalog/' . $type . '/add') ?>">
         <i class="bi bi-plus-lg me-1"></i> Add <?= esc(rtrim($pageTitle, 's')) ?>
     </a>
